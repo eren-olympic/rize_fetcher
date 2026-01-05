@@ -1,11 +1,11 @@
 # Rize Fetcher Configuration
 
 # Obsidian Vault Path (Absolute Path)
-# Leave empty to use OBSIDIAN_VAULT_PATH environment variable
-vault_path: ""
+vault_path: "/Volumes/Sandisk/Obsidian/EREN_OLYMPIC"
 
 # Path to Daily Logs relative to vault root
 daily_logs_path: "00_COCKPIT/Daily_Logs"
+weekly_reviews_path: "00_COCKPIT/Weekly_Reviews"
 
 # Fetching defaults
 default_days_lookback: 0  # 0 = today, 1 = yesterday, etc.
