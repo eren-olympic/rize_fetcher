@@ -1,0 +1,64 @@
+# 🚀 Rize Data Fetcher
+
+A Python tool to sync your daily productivity metrics from [Rize.io](https://rize.io) directly into your [Obsidian](https://obsidian.md) Daily Logs.
+
+## ✨ Features
+- **Daily Sync**: Fetches Work Hours, Focus Time, Break Time, and more.
+- **Obsidian Integration**: Automatically finds or creates your Daily Log (`YYYY-MM-DD.md`) and updates it with frontmatter data.
+- **Smart Idempotency**: Can be run multiple times a day without duplicating data; simply updates the values.
+
+## 🛠️ Prerequisites
+- Python 3.12+
+- [Poetry](https://python-poetry.org/)
+- A Rize account with API access.
+
+## 📦 Installation
+
+1. **Navigate to the folder**:
+   ```bash
+   cd /Volumes/Sandisk/Code/rize_fetcher
+   ```
+2. **Install dependencies**:
+   ```bash
+   poetry install
+   ```
+
+## ⚙️ Configuration
+
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+2. Edit `.env` and fill in your details:
+   - `RIZE_API_KEY`: Get this from Rize Settings > API.
+   - `OBSIDIAN_VAULT_PATH`: Absolute path to your vault root (e.g., `/Volumes/Sandisk/Obsidian/EREN_OLYMPIC`).
+
+## 🏃 Usage
+
+Run the fetcher to sync today's data:
+
+```bash
+poetry run python fetch_data.py
+```
+
+### Automation (Cron)
+To run this automatically every night at 9 PM:
+
+```bash
+0 21 * * * cd /Volumes/Sandisk/Code/rize_fetcher && /usr/local/bin/poetry run python fetch_data.py >> /tmp/rize.log 2>&1
+```
+*(Make sure to use the absolute path to your `poetry` executable, which you can find with `which poetry`)*
+
+## 🔍 Development 工具
+- **Schema Explorer**: Run `poetry run python explore_schema.py` to inspect the Rize GraphQL schema.
+- **Bucket Test**: Run `poetry run python brute_force_bucket.py` to verify valid API aggregation buckets.
+
+## 📝 Frontmatter Fields
+The tool injects the following fields into your Obsidian Daily Note:
+```yaml
+rize_work_hours: 15359       # Total work seconds
+rize_focus_time: 8136        # Focus time seconds
+rize_break_time: 795         # Break time seconds
+rize_meeting_time: 0         # Meeting time seconds
+rize_last_sync: '2026-01-05' # Timestamp
+```
