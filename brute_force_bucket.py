@@ -36,7 +36,7 @@ def test_bucket_size(bucket_val):
     if "errors" in data:
         print(f"FAILED: {data['errors'][0]['message']}")
     else:
-        print(f"SUCCESS!")
+        print("SUCCESS!")
         print(data)
 
 if __name__ == "__main__":

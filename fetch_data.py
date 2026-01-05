@@ -179,7 +179,8 @@ def update_daily_note(date_obj, metrics, projects, config):
             
         # Update metadata - Convert seconds to hours
         def to_hours(seconds):
-             if not seconds: return 0.0
+             if not seconds:
+                 return 0.0
              return round(seconds / 3600, 2)
 
         post.metadata["rize_work_hours"] = to_hours(metrics.get("workHours"))
@@ -324,7 +325,8 @@ def update_weekly_review(start_date, end_date, aggregated_metrics, aggregated_pr
             
         # Update metadata (Totals)
         def to_hours(seconds):
-             if not seconds: return 0.0
+             if not seconds:
+                 return 0.0
              return round(seconds / 3600, 2)
 
         post.metadata["rize_total_work_hours"] = to_hours(aggregated_metrics.get("workHours", 0))
@@ -403,7 +405,8 @@ if __name__ == "__main__":
             d = start_of_week + datetime.timedelta(days=i)
             # Only fetch up to today to save API calls? Actually Rize allows future queries (returns 0).
             # But let's verify if d > today?
-            if d > today: continue
+            if d > today:
+                continue
             
             print(f"  Fetching {d}...")
             metrics = fetch_daily_data(d)
