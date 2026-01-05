@@ -1,23 +1,19 @@
 import os
-import datetime
 import requests
+import datetime
 import frontmatter
+import argparse
+import yaml
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configuration
+# We still load API KEY from env, but paths can now come from config
 RIZE_API_KEY = os.getenv("RIZE_API_KEY")
-OBSIDIAN_VAULT_PATH = os.getenv("OBSIDIAN_VAULT_PATH")
 API_URL = "https://api.rize.io/api/v1/graphql"
 
 if not RIZE_API_KEY:
     raise ValueError("RIZE_API_KEY not found in .env")
-
-if not OBSIDIAN_VAULT_PATH:
-    raise ValueError("OBSIDIAN_VAULT_PATH not found in .env")
-
-DAILY_LOGS_DIR = os.path.join(OBSIDIAN_VAULT_PATH, "00_COCKPIT", "Daily_Logs")
 
 def fetch_daily_data(date_obj):
     """
@@ -137,11 +133,40 @@ def format_time(seconds):
     h, m = divmod(m, 60)
     return f"{h}h {m}m"
 
-def update_daily_note(date_obj, metrics, projects):
+def load_config(config_path="config.yaml"):
+    """Loads configuration from yaml file."""
+    if not os.path.exists(config_path):
+        return {}
+    with open(config_path, "r") as f:
+        return yaml.safe_load(f) or {}
+
+def update_daily_note(date_obj, metrics, projects, config):
     date_str = date_obj.isoformat()
-    filename = f"{date_str}.md"
-    filepath = os.path.join(DAILY_LOGS_DIR, filename)
     
+    # Determine vault path
+    vault_path = config.get("vault_path")
+    if not vault_path:
+        vault_path = os.getenv("OBSIDIAN_VAULT_PATH")
+    
+    if not vault_path:
+        print("Error: Vault path not set in config.yaml or OBSIDIAN_VAULT_PATH env var.")
+        return
+
+    # Determine daily logs path
+    daily_logs_rel = config.get("daily_logs_path", "00_COCKPIT/Daily_Logs")
+    daily_logs_dir = os.path.join(vault_path, daily_logs_rel)
+
+    if not os.path.exists(daily_logs_dir):
+        try:
+            os.makedirs(daily_logs_dir)
+        except OSError:
+            print(f"Error: Could not create directory {daily_logs_dir}")
+            return
+            
+    filename = f"{date_str}.md"
+    filepath = os.path.join(daily_logs_dir, filename)
+    
+    # Check if file exists, if not create
     if not os.path.exists(filepath):
         print(f"Daily note for {date_str} does not exist. Creating it.")
         with open(filepath, "w") as f:
@@ -151,12 +176,16 @@ def update_daily_note(date_obj, metrics, projects):
         with open(filepath, "r") as f:
             post = frontmatter.load(f)
             
-        # Update metadata
-        post.metadata["rize_work_hours"] = metrics.get("workHours")
-        post.metadata["rize_focus_time"] = metrics.get("focusTime")
-        post.metadata["rize_meeting_time"] = metrics.get("meetingTime")
-        post.metadata["rize_break_time"] = metrics.get("breakTime")
-        post.metadata["rize_tracked_time"] = metrics.get("trackedTime")
+        # Update metadata - Convert seconds to hours
+        def to_hours(seconds):
+             if not seconds: return 0.0
+             return round(seconds / 3600, 2)
+
+        post.metadata["rize_work_hours"] = to_hours(metrics.get("workHours"))
+        post.metadata["rize_focus_time"] = to_hours(metrics.get("focusTime"))
+        post.metadata["rize_meeting_time"] = to_hours(metrics.get("meetingTime"))
+        post.metadata["rize_break_time"] = to_hours(metrics.get("breakTime"))
+        post.metadata["rize_tracked_time"] = to_hours(metrics.get("trackedTime"))
         post.metadata["rize_last_sync"] = datetime.datetime.now().isoformat()
         
         # Format Body Content with Tables
@@ -203,13 +232,43 @@ def update_daily_note(date_obj, metrics, projects):
         print(f"Error updating file: {e}")
 
 if __name__ == "__main__":
-    # improved default: fetch for today
-    today = datetime.date.today()
-    print(f"Fetching Rize data for {today.isoformat()}...")
+    parser = argparse.ArgumentParser(description="Fetch Rize metrics and update Obsidian.")
+    parser.add_argument("--date", help="Fetch for specific date (YYYY-MM-DD)")
+    parser.add_argument("--days", type=int, help="Fetch data for the last N days")
+    parser.add_argument("--config", default="config.yaml", help="Path to config file")
     
-    metrics = fetch_daily_data(today)
-    projects = fetch_project_data(today)
+    args = parser.parse_args()
     
-    if metrics:
-        print(f"Metrics received: {metrics.keys()}")
-        update_daily_note(today, metrics, projects)
+    # Load config
+    config = load_config(args.config)
+    
+    dates_to_fetch = []
+    
+    if args.date:
+        try:
+            target_date = datetime.date.fromisoformat(args.date)
+            dates_to_fetch.append(target_date)
+        except ValueError:
+            print("Invalid date format. Please use YYYY-MM-DD.")
+            exit(1)
+    elif args.days:
+        today = datetime.date.today()
+        for i in range(args.days):
+             d = today - datetime.timedelta(days=i)
+             dates_to_fetch.append(d)
+    else:
+        # Default behavior: Today (or from config default)
+        lookback = config.get("default_days_lookback", 0)
+        today = datetime.date.today()
+        target_date = today - datetime.timedelta(days=lookback)
+        dates_to_fetch.append(target_date)
+
+    for d in dates_to_fetch:
+        print(f"Fetching Rize data for {d.isoformat()}...")
+        metrics = fetch_daily_data(d)
+        projects = fetch_project_data(d)
+        
+        if metrics:
+            update_daily_note(d, metrics, projects, config)
+        else:
+            print(f"No metrics found for {d.isoformat()}")

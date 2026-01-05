@@ -31,14 +31,36 @@ A Python tool to sync your daily productivity metrics from [Rize.io](https://riz
    ```
 2. Edit `.env` and fill in your details:
    - `RIZE_API_KEY`: Get this from Rize Settings > API.
-   - `OBSIDIAN_VAULT_PATH`: Absolute path to your vault root (e.g., `/Users/username/Obsidian/Vault`).
+   - `OBSIDIAN_VAULT_PATH`: Environment variable fallback (optional if using `config.yaml`).
+
+3. **(Optional) Config File**:
+   Edit `config.yaml` to customize paths and defaults:
+   ```yaml
+   vault_path: "/path/to/custom/vault"
+   daily_logs_path: "00_COCKPIT/Daily_Logs"
+   default_days_lookback: 0
+   ```
 
 ## 🏃 Usage
 
-Run the fetcher to sync today's data:
-
+### Basic usage (Today)
 ```bash
 poetry run python fetch_data.py
+```
+
+### Fetch specific date
+```bash
+poetry run python fetch_data.py --date 2024-01-01
+```
+
+### Fetch last N days
+```bash
+poetry run python fetch_data.py --days 3
+```
+
+### Custom Config
+```bash
+poetry run python fetch_data.py --config my_config.yaml
 ```
 
 ### Automation (Cron)
@@ -56,9 +78,9 @@ To run this automatically every night at 9 PM:
 ## 📝 Frontmatter Fields
 The tool injects the following fields into your Obsidian Daily Note:
 ```yaml
-rize_work_hours: 15359       # Total work seconds
-rize_focus_time: 8136        # Focus time seconds
-rize_break_time: 795         # Break time seconds
-rize_meeting_time: 0         # Meeting time seconds
+rize_work_hours: 4.25        # Total work hours
+rize_focus_time: 2.5         # Focus time hours
+rize_break_time: 0.5         # Break time hours
+rize_meeting_time: 1.0       # Meeting time hours
 rize_last_sync: '2026-01-05' # Timestamp
 ```
