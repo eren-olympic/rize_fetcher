@@ -18,68 +18,51 @@ def explore_schema():
         "Authorization": f"Bearer {RIZE_API_KEY}"
     }
 
-    # Introspection query to get all types and query root fields
-    query = """
-    query IntrospectionQuery {
-      __schema {
-        types {
-          name
-          kind
-          description
-          fields {
-            name
-            description
-          }
-        }
-        queryType {
-          fields {
-            name
-            description
-            args {
-              name
-              type {
+    # Inspect projectTimeEntries
+    pte_query = """
+    query PTEIntrospection {
+        __type(name: "Query") {
+            fields {
                 name
-                kind
-              }
+                args {
+                    name
+                    type {
+                        name
+                        kind
+                    }
+                }
             }
-          }
         }
-      }
+        pteType: __type(name: "ProjectTimeEntry") {
+            fields {
+                name
+                type {
+                    name
+                    kind
+                }
+            }
+        }
     }
     """
-
-    response = requests.post(API_URL, headers=headers, json={"query": query})
+    print("\nfetching details for 'projectTimeEntries'...")
+    resp = requests.post(API_URL, headers=headers, json={"query": pte_query})
+    data = resp.json()
     
-    if response.status_code != 200:
-        print(f"Error: API returned status {response.status_code}")
-        print(response.text)
-        return
-
-    data = response.json()
+    if "data" in data and data["data"]["__type"]:
+        # Find projectTimeEntries arg
+        fields = data["data"]["__type"]["fields"]
+        pte_field = next((f for f in fields if f["name"] == "projectTimeEntries"), None)
+        if pte_field:
+            print("projectTimeEntries args:")
+            for arg in pte_field["args"]:
+                print(f"- {arg['name']}")
+        else:
+            print("Field 'projectTimeEntries' not found in Query type.")
     
-    if "errors" in data:
-        print("GraphQL Errors:")
-        print(json.dumps(data["errors"], indent=2))
-        return
-
-    schema = data["data"]["__schema"]
-    query_fields = schema["queryType"]["fields"]
-    
-    print(f"Found {len(query_fields)} root query fields.")
-    
-    # Inspect 'summaries' query args details
-    print("\nInspecting 'summaries' query args:")
-    summaries_field = next((f for f in query_fields if f["name"] == "summaries"), None)
-    if summaries_field:
-        for arg in summaries_field['args']:
-            type_name = arg['type']['name']
-            kind = arg['type']['kind']
-            # If kind is NON_NULL, get inner type
-            if kind == 'NON_NULL' and 'ofType' in arg['type'] and arg['type']['ofType']:
-                 type_name = arg['type']['ofType']['name']
-                 kind = f"NON_NULL({arg['type']['ofType']['kind']})"
-                 
-            print(f"- Arg: {arg['name']}, Type: {type_name}, Kind: {kind}")
+    if "data" in data and data["data"]["pteType"]:
+        print("\nProjectTimeEntry fields:")
+        for f in data["data"]["pteType"]["fields"]:
+            print(f"- {f['name']}")
 
 if __name__ == "__main__":
     explore_schema()
