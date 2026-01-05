@@ -63,6 +63,12 @@ poetry run python fetch_data.py --days 3
 poetry run python fetch_data.py --config my_config.yaml
 ```
 
+### Weekly Review
+Fetch and aggregate data for the current week into `00_COCKPIT/Weekly_Reviews/YYYY-Www.md`:
+```bash
+poetry run python fetch_data.py --weekly
+```
+
 ### Automation (Cron)
 To run this automatically every night at 9 PM:
 
@@ -71,7 +77,7 @@ To run this automatically every night at 9 PM:
 ```
 *(Make sure to use the absolute path to your `poetry` executable, which you can find with `which poetry`)*
 
-## 🔍 Development 工具
+## 🔍 Development
 - **Schema Explorer**: Run `poetry run python explore_schema.py` to inspect the Rize GraphQL schema.
 - **Bucket Test**: Run `poetry run python brute_force_bucket.py` to verify valid API aggregation buckets.
 
