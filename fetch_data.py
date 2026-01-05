@@ -13,9 +13,6 @@ load_dotenv()
 RIZE_API_KEY = os.getenv("RIZE_API_KEY")
 API_URL = "https://api.rize.io/api/v1/graphql"
 
-if not RIZE_API_KEY:
-    raise ValueError("RIZE_API_KEY not found in .env")
-
 def fetch_daily_data(date_obj):
     """
     Fetches Rize metrics for a specific date.
@@ -387,6 +384,10 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     config = load_config(args.config)
+    
+    if not RIZE_API_KEY:
+        print("Error: RIZE_API_KEY not found in .env")
+        exit(1)
     
     # WEEKLY MODE
     if args.weekly:
