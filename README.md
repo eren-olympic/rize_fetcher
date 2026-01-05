@@ -16,7 +16,7 @@ A Python tool to sync your daily productivity metrics from [Rize.io](https://riz
 
 1. **Navigate to the folder**:
    ```bash
-   cd /Volumes/Sandisk/Code/rize_fetcher
+   cd /path/to/rize_fetcher
    ```
 2. **Install dependencies**:
    ```bash
@@ -31,7 +31,7 @@ A Python tool to sync your daily productivity metrics from [Rize.io](https://riz
    ```
 2. Edit `.env` and fill in your details:
    - `RIZE_API_KEY`: Get this from Rize Settings > API.
-   - `OBSIDIAN_VAULT_PATH`: Absolute path to your vault root (e.g., `/Volumes/Sandisk/Obsidian/EREN_OLYMPIC`).
+   - `OBSIDIAN_VAULT_PATH`: Absolute path to your vault root (e.g., `/Users/username/Obsidian/Vault`).
 
 ## 🏃 Usage
 
@@ -45,7 +45,7 @@ poetry run python fetch_data.py
 To run this automatically every night at 9 PM:
 
 ```bash
-0 21 * * * cd /Volumes/Sandisk/Code/rize_fetcher && /usr/local/bin/poetry run python fetch_data.py >> /tmp/rize.log 2>&1
+0 21 * * * cd /path/to/rize_fetcher && /path/to/poetry run python fetch_data.py >> /tmp/rize.log 2>&1
 ```
 *(Make sure to use the absolute path to your `poetry` executable, which you can find with `which poetry`)*
 
